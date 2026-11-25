@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2b1f78">
+<title>Tiru Aku — Game Ice Breaking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #2b1f78; --bg2: #3d2a9e;
+    --card: #ffffff; --ink: #231a58; --muted: #6f67a3; --line: #e3defa;
+    --pop: #ffd23f; --pop2: #ffb703; --spy: #ff4d7d; --ok: #2fd39a; --ok-ink: #063d2a;
+    --radius: 22px;
+    --shadow: 0 10px 28px rgba(15, 8, 60, .28);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    color: var(--ink);
+    font-family: "Fredoka", "Avenir Next Rounded", "Nunito", "Trebuchet MS", system-ui, sans-serif;
+    font-size: 16px; line-height: 1.4;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(255,77,125,.45), transparent 38%),
+      radial-gradient(circle at 92% 22%, rgba(255,210,63,.28), transparent 34%),
+      radial-gradient(circle at 50% 105%, rgba(47,211,154,.25), transparent 40%),
+      linear-gradient(165deg, #241b6b, #3b2494 55%, #2a1a63);
+    background-attachment: fixed; background-color: var(--bg);
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+  body.lock { overflow: hidden; }
+  main { max-width: 560px; margin: 0 auto; padding: 18px 16px 56px; }
+  h1, h2, h3 { margin: 0; line-height: 1.15; }
+  h3 { font-weight: 600; font-size: 1.1rem; }
+  p { margin: 6px 0; }
+
+  /* hero */
+  .hero { text-align: center; margin: 14px 0 22px; }
+  .hero .icon { font-size: 3.6rem; filter: drop-shadow(0 6px 10px rgba(0,0,0,.3)); animation: bob 3s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(-6px) rotate(-4deg); } }
+  .logo { color: #fff; font-size: 2.8rem; font-weight: 700; letter-spacing: -.01em; }
+  .logo span { display: inline-block; background: var(--spy); padding: 0 12px; border-radius: 14px; transform: rotate(-3deg); box-shadow: 0 5px 0 rgba(0,0,0,.2); }
+  .tag { color: #d9d3ff; margin: 10px auto 0; max-width: 32ch; }
+  .page-title { color: #fff; font-size: 1.5rem; font-weight: 700; margin: 4px 0 14px; }
+
+  /* kartu */
+  .card { background: var(--card); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .card.glass { background: rgba(255,255,255,.12); color: #fff; box-shadow: none; border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(6px); }
+  .muted { color: var(--muted); }
+  .glass .muted { color: #d9d3ff; }
+  label { display: block; font-weight: 600; margin-bottom: 6px; }
+  input[type=text], textarea {
+    width: 100%; font: inherit; color: var(--ink); background: #f7f5ff;
+    border: 2px solid var(--line); border-radius: 14px; padding: 12px 14px;
+  }
+  input[type=text]:focus, textarea:focus { outline: 3px solid var(--pop); border-color: var(--ink); background: #fff; }
+  textarea { min-height: 300px; resize: vertical; }
+
+  /* tombol */
+  button {
+    font: inherit; font-weight: 600; cursor: pointer; border: 0; border-radius: 16px; padding: 13px 18px;
+    background: linear-gradient(var(--pop), var(--pop2)); color: var(--ink);
+    box-shadow: 0 5px 0 rgba(120,70,0,.45); transition: transform .08s, box-shadow .08s, filter .15s;
+  }
+  button:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(120,70,0,.45); }
+  button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+  button.alt { background: #fff; box-shadow: 0 5px 0 rgba(35,26,88,.25); }
+  button.ghost { background: transparent; color: #fff; box-shadow: none; border: 2px solid rgba(255,255,255,.55); }
+  button.danger { background: linear-gradient(#ff6b93, var(--spy)); color: #fff; box-shadow: 0 5px 0 rgba(130,0,40,.45); }
+  button.block { width: 100%; }
+  button:disabled { opacity: .5; cursor: not-allowed; filter: grayscale(.4); }
+  .row { display: flex; gap: 10px; align-items: center; }
+  .grow { flex: 1; }
+  .divider { text-align: center; color: #d9d3ff; margin: 14px 0; }
+
+  .code { font-size: 3.6rem; font-weight: 700; letter-spacing: .2em; text-align: center; color: var(--pop); text-shadow: 0 4px 0 rgba(0,0,0,.25); padding-left: .2em; }
+  .small-code { letter-spacing: .12em; color: var(--pop); }
+
+  /* avatar & chip */
+  .av { width: 28px; height: 28px; border-radius: 50%; display: inline-grid; place-items: center; font-weight: 700; font-size: .9rem; color: #fff; flex: none; text-shadow: 0 1px 2px rgba(0,0,0,.3); }
+  .av.lg { width: 44px; height: 44px; font-size: 1.3rem; }
+  .av.xl { width: 84px; height: 84px; font-size: 2.6rem; box-shadow: 0 0 0 6px rgba(255,255,255,.7); }
+  .players { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chip { display: inline-flex; align-items: center; gap: 7px; background: #f1eeff; color: var(--ink); border-radius: 999px; padding: 4px 12px 4px 4px; font-weight: 500; }
+  .chip.off { opacity: .55; }
+  .chip.spy { background: #ffe0e9; color: #8e0f35; }
+  .chip.inn { background: #d6f8ea; color: var(--ok-ink); }
+  .chip.out span:last-child { text-decoration: line-through; }
+  .chip.out { opacity: .6; }
+  .chip button { padding: 0 4px; background: none; box-shadow: none; color: var(--muted); font-size: 1.2rem; line-height: 1; }
+  .chip em { font-style: normal; font-size: .75rem; font-weight: 700; margin-left: 2px; }
+
+  .stepper { display: flex; align-items: center; gap: 16px; margin-top: 10px; }
+  .stepper button { width: 50px; height: 50px; padding: 0; font-size: 1.6rem; }
+  .stepper b { font-size: 2.2rem; min-width: 2ch; text-align: center; }
+  details summary { cursor: pointer; font-weight: 600; font-size: 1.05rem; }
+  details[open] summary { margin-bottom: 10px; }
+
+  /* pill peran */
+  .rolebar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .pill { padding: 6px 14px; border-radius: 999px; font-weight: 600; font-size: .95rem; background: rgba(255,255,255,.16); color: #fff; }
+  .pill.spy { background: var(--spy); }
+  .pill.ok { background: var(--ok); color: var(--ok-ink); }
+  .pill.out { background: #fff; color: var(--ink); }
+
+  /* kartu nomor */
+  .stick { position: sticky; top: 0; z-index: 6; margin: 0 -16px 12px; padding: 8px 16px 6px; background: linear-gradient(#2d2080 75%, rgba(45,32,128,0)); }
+  .call { border-radius: var(--radius); padding: 16px 16px 18px; text-align: center; background: linear-gradient(var(--pop), var(--pop2)); color: var(--ink); box-shadow: var(--shadow); }
+  .call.spy { background: linear-gradient(#ff6b93, var(--spy)); color: #fff; }
+  .call.idle { background: rgba(255,255,255,.14); color: #d9d3ff; box-shadow: none; border: 2px dashed rgba(255,255,255,.35); }
+  .call .lbl { font-size: .8rem; font-weight: 700; letter-spacing: .2em; opacity: .75; }
+  .call .num { font-size: 4rem; font-weight: 700; line-height: 1; }
+  .call .act { font-size: 1.35rem; font-weight: 600; margin-top: 6px; }
+  .call.pulse { animation: pop .4s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes pop { from { transform: scale(.9); } to { transform: scale(1); } }
+
+  /* grid nomor admin */
+  .tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 14px; }
+  .tile { aspect-ratio: 1; padding: 0; font-size: 1.35rem; background: #fff; box-shadow: 0 4px 0 rgba(35,26,88,.3); }
+  .tile.active { background: linear-gradient(var(--pop), var(--pop2)); box-shadow: 0 4px 0 rgba(120,70,0,.5); transform: translateY(-2px); }
+
+  /* daftar kegiatan */
+  .list { display: grid; gap: 8px; }
+  .item { display: flex; gap: 12px; align-items: center; background: #f7f5ff; border-radius: 14px; padding: 8px 12px 8px 8px; border: 3px solid transparent; }
+  .item .n { flex: none; width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; background: var(--ink); color: #fff; font-weight: 700; }
+  .item.spyrow { background: #ffe9ef; color: #9b1237; }
+  .item.spyrow .n { background: var(--spy); }
+  .item.active { border-color: var(--ink); background: #fff3c4; }
+  .item.spyrow.active { background: var(--spy); color: #fff; }
+  .item.spyrow.active .n { background: #fff; color: var(--spy); }
+
+  /* hasil akhir */
+  .over { text-align: center; border-radius: var(--radius); padding: 20px; margin-bottom: 14px; font-weight: 700; font-size: 1.5rem; box-shadow: var(--shadow); }
+  .over.inn { background: linear-gradient(#4de8b4, var(--ok)); color: var(--ok-ink); }
+  .over.spy { background: linear-gradient(#ff6b93, var(--spy)); color: #fff; }
+  .over small { display: block; font-weight: 500; font-size: .95rem; margin-top: 4px; opacity: .85; }
+
+  /* progress voting admin */
+  .bar { height: 14px; background: var(--line); border-radius: 99px; overflow: hidden; margin: 10px 0 14px; }
+  .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--ok), #7af0c8); border-radius: 99px; transition: width .35s; }
+
+  /* overlay hasil (5 detik) */
+  .overlay { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 20px; background: rgba(20,12,60,.78); backdrop-filter: blur(6px); animation: fade .2s; }
+  @keyframes fade { from { opacity: 0; } }
+  .ocard { position: relative; width: min(420px, 100%); border-radius: 28px; padding: 28px 20px 22px; text-align: center; background: #fff; box-shadow: 0 20px 60px rgba(0,0,0,.45); overflow: hidden; animation: pop .45s cubic-bezier(.2,1.6,.4,1); }
+  .ocard.spy { background: linear-gradient(#ff7aa0, var(--spy)); color: #fff; }
+  .ocard.inn { background: linear-gradient(#5ff0bd, var(--ok)); color: var(--ok-ink); }
+  .ocard .who { font-size: 2rem; font-weight: 700; margin: 14px 0 4px; word-break: break-word; }
+  .ocard .sub { font-size: 1rem; opacity: .9; }
+  .ocard .badge { display: inline-block; margin: 12px 0 8px; font-size: 2.2rem; font-weight: 700; letter-spacing: .05em; padding: 6px 26px; border-radius: 16px; background: rgba(255,255,255,.95); }
+  .ocard.spy .badge { color: var(--spy); }
+  .ocard.inn .badge { color: #0b8f63; }
+  .ocard .emoji { font-size: 4rem; }
+  .ocard .tally { margin-top: 10px; font-size: .95rem; opacity: .92; }
+  .ocard .timer { position: absolute; left: 0; bottom: 0; height: 7px; width: 100%; background: rgba(0,0,0,.25); transform-origin: left; animation: shrink 5s linear forwards; }
+  @keyframes shrink { to { transform: scaleX(0); } }
+  .confetti { position: absolute; top: -12px; width: 9px; height: 14px; border-radius: 2px; animation: fall 2.6s ease-in forwards; }
+  @keyframes fall { to { transform: translateY(520px) rotate(540deg); opacity: .9; } }
+
+  /* lembar voting */
+  .sheet { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; background: linear-gradient(165deg, #241b6b, #3b2494); padding-top: env(safe-area-inset-top); animation: fade .2s; }
+  .sheet-head { padding: 18px 16px 10px; color: #fff; text-align: center; }
+  .sheet-head h2 { font-size: 1.6rem; }
+  .sheet-head p { color: #d9d3ff; margin: 4px 0 0; }
+  .sheet-body { flex: 1; overflow-y: auto; padding: 8px 14px 14px; -webkit-overflow-scrolling: touch; }
+  .vgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-width: 560px; margin: 0 auto; }
+  .vbtn { display: flex; align-items: center; gap: 10px; text-align: left; background: #fff; box-shadow: 0 4px 0 rgba(35,26,88,.3); padding: 10px; position: relative; min-height: 64px; }
+  .vbtn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .vbtn.sel { background: linear-gradient(var(--pop), var(--pop2)); outline: 3px solid #fff; }
+  .vbtn .tick { position: absolute; right: 8px; top: 6px; color: var(--ink); }
+  .sheet-foot { padding: 12px 16px calc(14px + env(safe-area-inset-bottom)); background: rgba(20,12,60,.7); border-top: 1px solid rgba(255,255,255,.15); text-align: center; color: #d9d3ff; }
+  .sheet-foot button { max-width: 560px; }
+  .sheet-foot button.on { background: linear-gradient(#fff, #e8e4ff); outline: 3px solid var(--pop); }
+  .sheet-foot .st { margin-top: 8px; font-size: .9rem; }
+
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(140px); background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 14px; font-weight: 500; max-width: 90vw; transition: transform .25s; z-index: 80; border: 2px solid var(--pop); }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  #banner { position: fixed; top: 0; left: 0; right: 0; background: var(--spy); color: #fff; text-align: center; padding: 10px; font-weight: 600; z-index: 90; }
+  #banner button { padding: 3px 12px; margin-left: 6px; }
+  .hidden { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  @media (min-width: 520px) { .vgrid { grid-template-columns: repeat(3, 1fr); } }
+</style>
+</head>
+<body>
+<div id="banner" class="hidden" role="status"></div>
+<main id="app"></main>
+<div id="sheet" class="sheet hidden"></div>
+<div id="overlay" class="overlay hidden" role="dialog" aria-live="assertive"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script>
+const TOTAL = 20;
+const DEFAULT_ACTIVITIES = [
+  'Lompat di tempat 3 kali','Tepuk tangan sambil berputar','Pura-pura jadi kucing mengeong','Joget goyang pinggul',
+  'Pegang hidung dengan tangan kiri','Jalan mundur 3 langkah','Pura-pura menyetir mobil','Salaman dengan orang di sebelahmu',
+  'Pose superhero sambil teriak "Hore!"','Pura-pura makan mie yang panas','Mengangkat kedua tangan dan geleng-geleng',
+  'Jongkok lalu berdiri cepat 2 kali','Pura-pura menggendong bayi','Tutup mata sambil tersenyum lebar','Pura-pura main gitar',
+  'Lambaikan tangan ke semua orang','Berdiri satu kaki selama 5 detik','Pura-pura jadi robot','Tos dengan 2 orang berbeda',
+  'Pura-pura berenang gaya bebas'
+];
+
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const rid = () => Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2, '0')).join('');
+const randInt = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
+const genCode = () => { const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; return Array.from({ length: 4 }, () => c[randInt(c.length)]).join(''); };
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 3500);
+}
+function banner(msg, leave) {
+  const b = $('#banner');
+  if (!msg) { b.classList.add('hidden'); return; }
+  b.textContent = msg + ' ';
+  if (leave) {
+    const x = document.createElement('button'); x.textContent = 'Keluar'; x.className = 'alt'; x.style.padding = '4px 12px';
+    x.onclick = () => { save('spy_session', null); location.reload(); };
+    b.appendChild(x);
+  }
+  b.classList.remove('hidden');
+}
+
+/* ---------- session (disimpan di browser) ---------- */
+const load = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
+const save = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+
+let view = null, viewKey = '', lastCalled = null;
+
+/* =====================================================
+   JARINGAN: pesan lewat broker MQTT publik (WebSocket/443),
+   jadi tidak peduli HP-nya beda WiFi / beda provider.
+   Dua broker dipakai sekaligus sebagai cadangan.
+   ===================================================== */
+const BROKERS = ['wss://broker.emqx.io:8084/mqtt', 'wss://broker.hivemq.com:8884/mqtt'];
+const base = code => 'tiruaku/v1/' + code;
+
+class Bus {
+  constructor() { this.cs = []; this.subs = new Set(); this.onMsg = () => {}; this.onConnect = () => {}; }
+  start() {
+    BROKERS.forEach(url => {
+      const c = mqtt.connect(url, { clientId: 'ta_' + rid(), clean: true, keepalive: 30, reconnectPeriod: 2000, connectTimeout: 8000 });
+      c.on('connect', () => { this.subs.forEach(t => c.subscribe(t, { qos: 0 })); this.onConnect(); });
+      c.on('message', (topic, payload) => {
+        let m; try { m = JSON.parse(payload.toString()); } catch (e) { return; }
+        this.onMsg(topic, m);
+      });
+      c.on('error', () => {});
+      this.cs.push(c);
+    });
+  }
+  sub(t) { this.subs.add(t); this.cs.forEach(c => c.connected && c.subscribe(t, { qos: 0 })); }
+  pub(t, m, retain) { const s = JSON.stringify(m); this.cs.forEach(c => c.connected && c.publish(t, s, { qos: 0, retain: !!retain })); }
+  get ok() { return this.cs.some(c => c.connected); }
+  stop() { this.cs.forEach(c => { try { c.end(true); } catch (e) {} }); }
+}
+
+let bus = null, timers = [];
+const every = (fn, ms) => timers.push(setInterval(fn, ms));
+function teardown() { timers.forEach(clearInterval); timers = []; if (bus) { bus.stop(); bus = null; } }
+
+/* =====================================================
+   ADMIN = HOST. Semua logika game jalan di browser admin.
+   ===================================================== */
+let H = null;
+const seen = new Map();   // playerId -> terakhir kelihatan
+let vSeq = 0, lastSig = '', emitT = null;
+const nextV = () => (vSeq = Math.max(Date.now(), vSeq + 1));
+const isOnline = id => Date.now() - (seen.get(id) || 0) < 25000;
+
+function freshRoom(code) {
+  return { code, phase: 'lobby', players: new Map(), spies: new Set(), spyCount: 1,
+           activities: [...DEFAULT_ACTIVITIES], called: null, revealed: false,
+           out: new Set(), vote: null, result: null, over: null, log: [] };
+}
+function saveHost() {
+  save('spy_host', { code: H.code, phase: H.phase, players: [...H.players.values()].map(p => ({ id: p.id, name: p.name })),
+    spies: [...H.spies], spyCount: H.spyCount, activities: H.activities, called: H.called, revealed: H.revealed,
+    out: [...H.out], vote: H.vote, result: H.result, over: H.over, log: H.log });
+}
+function restoreHost(d) {
+  H = freshRoom(d.code);
+  H.phase = d.phase; H.spyCount = d.spyCount; H.activities = d.activities; H.called = d.called; H.revealed = d.revealed;
+  H.spies = new Set(d.spies);
+  H.out = new Set(d.out || []); H.vote = d.vote || null; H.result = d.result || null; H.over = d.over || null; H.log = d.log || [];
+  d.players.forEach(p => H.players.set(p.id, { id: p.id, name: p.name }));
+}
+const playerList = () => [...H.players.values()].map(p => ({ id: p.id, name: p.name, online: isOnline(p.id) }));
+const aliveIds = () => [...H.players.keys()].filter(id => !H.out.has(id));
+const votedCount = () => !H.vote ? 0 : aliveIds().filter(id => { const t = H.vote.votes[id]; return t && (t === 'skip' || (H.players.has(t) && !H.out.has(t))); }).length;
+const spyNames = () => [...H.players.values()].filter(p => H.spies.has(p.id)).map(p => p.name);
+
+function adminState() {
+  return { role: 'admin', code: H.code, phase: H.phase, players: playerList(), spyCount: H.spyCount,
+    activities: H.activities, called: H.called, spies: H.phase === 'playing' ? [...H.spies] : [], revealed: H.revealed,
+    out: [...H.out], vote: { open: !!H.vote, voted: votedCount(), total: aliveIds().length }, result: H.result, over: H.over, log: H.log };
+}
+function playerState(p) {
+  const playing = H.phase === 'playing';
+  const isSpy = playing && H.spies.has(p.id);
+  return { role: 'player', code: H.code, phase: H.phase, me: { id: p.id, name: p.name }, players: playerList(), isSpy,
+    activities: playing && !isSpy ? H.activities : null, called: H.called, revealed: H.revealed ? spyNames() : null,
+    isOut: H.out.has(p.id), result: H.result, over: H.over, log: H.log, myVote: H.vote ? (H.vote.votes[p.id] || null) : null,
+    vote: { open: !!H.vote, candidates: H.vote ? [...H.players.values()].filter(x => !H.out.has(x.id) && x.id !== p.id).map(x => ({ id: x.id, name: x.name })) : [] } };
+}
+function pubPlayer(p) {
+  if (bus) bus.pub(base(H.code) + '/p/' + p.id, { t: 'state', v: nextV(), s: playerState(p) }, true);
+}
+function emitAll() {
+  clearTimeout(emitT);
+  lastSig = playerList().map(p => p.online).join();
+  saveHost();
+  receive(adminState());
+  for (const p of H.players.values()) pubPlayer(p);
+}
+const soon = () => { clearTimeout(emitT); emitT = setTimeout(emitAll, 400); };
+
+function startHost(code) {
+  teardown();
+  const b = base(code);
+  bus = new Bus();
+  bus.onMsg = hostOnMsg;
+  bus.onConnect = () => { banner(null); bus.pub(b + '/h', { ts: Date.now() }, true); emitAll(); };
+  bus.start();
+  bus.sub(b + '/join'); bus.sub(b + '/hb'); bus.sub(b + '/vote');
+  every(() => bus && bus.pub(b + '/h', { ts: Date.now() }, true), 5000);
+  every(() => {
+    if (!bus) return;
+    if (!bus.ok) banner('Koneksi terputus, menyambung ulang…');
+    else banner(null);
+    if (playerList().map(p => p.online).join() !== lastSig) emitAll();
+  }, 5000);
+  banner('Menyambung ke server…');
+  receive(adminState());
+}
+
+function hostOnMsg(topic, m) {
+  if (!H || !m) return;
+  if (topic.endsWith('/hb') && m.pid && H.players.has(m.pid)) {
+    const was = isOnline(m.pid); seen.set(m.pid, Date.now()); if (!was) soon();
+  } else if (topic.endsWith('/join') && m.t === 'join') onJoin(m);
+  else if (topic.endsWith('/vote') && m.t === 'vote') onVote(m);
+}
+
+function onJoin(m) {
+  if (!/^[0-9a-f]{16}$/.test(String(m.pid))) return;
+  const pid = m.pid, tp = base(H.code) + '/p/' + pid;
+  const reply = o => bus.pub(tp, o, false);
+  let p = H.players.get(pid);
+  const was = p && isOnline(pid);
+  seen.set(pid, Date.now());
+  if (!p) {
+    if (H.phase !== 'lobby') return reply({ t: 'error', msg: 'Game sudah dimulai. Minta admin balik ke lobby dulu.' });
+    if (H.players.size >= 60) return reply({ t: 'error', msg: 'Room sudah penuh.' });
+    const name = String(m.name || '').replace(/\s+/g, ' ').trim().slice(0, 20);
+    if (!name) return reply({ t: 'error', msg: 'Isi namamu dulu.' });
+    if ([...H.players.values()].some(x => x.name.toLowerCase() === name.toLowerCase()))
+      return reply({ t: 'error', msg: 'Nama itu sudah dipakai, coba nama lain.' });
+    p = { id: pid, name };
+    H.players.set(pid, p);
+    reply({ t: 'joined', name });
+    return emitAll();
+  }
+  reply({ t: 'joined', name: p.name });
+  pubPlayer(p);
+  if (!was) soon();
+}
+
+function onVote(m) {
+  if (!H.vote || H.phase !== 'playing') return;
+  const v = String(m.pid), t = String(m.target);
+  if (!H.players.has(v) || H.out.has(v)) return;
+  if (t !== 'skip' && (!H.players.has(t) || H.out.has(t) || v === t)) return;
+  if (H.vote.votes[v] === t) return;
+  H.vote.votes[v] = t;
+  seen.set(v, Date.now());
+  soon();
+}
+
+function closeVote() {
+  const tally = {}; let skip = 0;
+  for (const [v, t] of Object.entries(H.vote.votes)) {
+    if (!H.players.has(v) || H.out.has(v)) continue;
+    if (t === 'skip') skip++;
+    else if (H.players.has(t) && !H.out.has(t)) tally[t] = (tally[t] || 0) + 1;
+  }
+  const entries = Object.entries(tally).sort((a, b) => b[1] - a[1]);
+  const resId = Date.now();
+  const res = { id: resId, kind: 'none', tally: entries.map(([i, c]) => ({ name: H.players.get(i).name, count: c })), skip, out: null };
+  const top = entries.length ? entries[0][1] : 0;
+  if (!entries.length && !skip) res.kind = 'none';
+  else if (skip > 0 && skip >= top) res.kind = 'skip';
+  else if (entries.length > 1 && entries[1][1] === top) res.kind = 'tie';
+  else {
+    const id = entries[0][0], isSpy = H.spies.has(id);
+    H.out.add(id);
+    H.log.push({ name: H.players.get(id).name, isSpy });
+    res.kind = 'out'; res.out = { name: H.players.get(id).name, isSpy };
+    const alive = aliveIds();
+    const spiesAlive = alive.filter(x => H.spies.has(x)).length;
+    const innAlive = alive.length - spiesAlive;
+    if (spiesAlive === 0) H.over = 'innocent';
+    else if (spiesAlive >= innAlive) H.over = 'spy';
+    if (H.over) H.revealed = true;
+  }
+  H.result = res;
+  H.vote = null;
+  setTimeout(() => { if (H && H.result && H.result.id === resId) { H.result = null; emitAll(); } }, 6500);
+}
+
+function act(type, d) {
+  if (!H) return;
+  if (type === 'config' && H.phase === 'lobby') {
+    if (Number.isInteger(d.spyCount) && d.spyCount >= 1 && d.spyCount <= 30) H.spyCount = d.spyCount;
+    if (d.activities) {
+      if (d.activities.length !== TOTAL) return toast('Kegiatan harus tepat 20 baris.');
+      H.activities = d.activities.map(a => a.slice(0, 120));
+    }
+  } else if (type === 'start') {
+    const ids = [...H.players.keys()];
+    if (ids.length < 2) return toast('Minimal 2 pemain untuk mulai.');
+    if (H.spyCount >= ids.length) return toast('Jumlah spy harus lebih sedikit dari jumlah pemain.');
+    for (let i = ids.length - 1; i > 0; i--) { const j = randInt(i + 1); [ids[i], ids[j]] = [ids[j], ids[i]]; }
+    H.spies = new Set(ids.slice(0, H.spyCount));
+    H.phase = 'playing'; H.called = null; H.revealed = false; H.out = new Set(); H.vote = null; H.result = null; H.over = null; H.log = [];
+  } else if (type === 'call' && H.phase === 'playing') {
+    if (!Number.isInteger(d) || d < 1 || d > TOTAL) return;
+    H.called = d;
+  } else if (type === 'openvote') {
+    if (H.phase !== 'playing' || H.vote || H.over) return;
+    H.vote = { votes: {} }; H.result = null;
+  } else if (type === 'closevote') {
+    if (!H.vote) return;
+    closeVote();
+  } else if (type === 'dismiss') {
+    H.result = null;
+  } else if (type === 'reveal' && H.phase === 'playing') {
+    H.revealed = true;
+  } else if (type === 'reset') {
+    H.phase = 'lobby'; H.spies = new Set(); H.called = null; H.revealed = false; H.out = new Set(); H.vote = null; H.result = null; H.over = null; H.log = [];
+  } else if (type === 'close') {
+    return closeRoom();
+  } else if (type === 'kick') {
+    if (bus) bus.pub(base(H.code) + '/p/' + d, { t: 'kicked' }, true);
+    H.players.delete(d); H.spies.delete(d); H.out.delete(d); seen.delete(d);
+  } else return;
+  emitAll();
+}
+
+function closeRoom() {
+  if (bus && H) for (const p of H.players.values()) bus.pub(base(H.code) + '/p/' + p.id, { t: 'closed' }, true);
+  timers.forEach(clearInterval); timers = [];
+  const old = bus; bus = null;
+  if (old) setTimeout(() => old.stop(), 800);   // beri waktu pesan terkirim
+  save('spy_host', null);
+  H = null; seen.clear(); banner(null);
+  showHome();
+}
+
+function createRoom(attempt = 0) {
+  teardown();
+  banner('Membuat room…');
+  const code = genCode(), b = base(code);
+  let taken = false;
+  const tmp = bus = new Bus();
+  tmp.onMsg = t => { if (t === b + '/h') taken = true; };
+  tmp.start(); tmp.sub(b + '/h');
+  setTimeout(() => {
+    if (bus !== tmp) return;
+    if (!tmp.ok) { teardown(); banner(null); return toast('Tidak bisa tersambung ke server. Cek internetmu lalu coba lagi.'); }
+    if (taken && attempt < 8) return createRoom(attempt + 1);
+    H = freshRoom(code);
+    startHost(code);
+  }, 2500);
+}
+
+/* =====================================================
+   PEMAIN. Hanya menerima state miliknya sendiri.
+   ===================================================== */
+let pending = null, voteCtx = null;
+function sendVote(target) {
+  pending = target;
+  if (bus && voteCtx) bus.pub(voteCtx.b + '/vote', { t: 'vote', pid: voteCtx.pid, target });
+}
+
+function connectPlayer(code, name, pid, rejoining) {
+  teardown();
+  pid = pid || rid();
+  const b = base(code), tp = b + '/p/' + pid;
+  voteCtx = { b, pid }; pending = null;
+  let joined = false, lastV = 0, tries = 0, tick = 0, lastHost = Date.now();
+  const markJoined = () => { if (!joined) { joined = true; save('spy_session', { code, pid, name }); banner(null); } };
+  const leave = () => { save('spy_session', null); teardown(); banner(null); if (viewKey !== 'home') showHome(); };
+  const sendJoin = () => bus && bus.pub(b + '/join', { t: 'join', pid, name });
+
+  bus = new Bus();
+  bus.onMsg = (topic, m) => {
+    if (topic === b + '/h') { lastHost = Date.now(); return; }
+    if (topic !== tp || !m) return;
+    if (m.t === 'joined') markJoined();
+    else if (m.t === 'state') { if (m.v <= lastV) return; lastV = m.v; markJoined(); receive(m.s); }
+    else if (m.t === 'error') { leave(); toast(m.msg); }
+    else if (m.t === 'kicked') { leave(); toast('Kamu dikeluarkan dari room.'); }
+    else if (m.t === 'closed') { leave(); toast('Room sudah ditutup oleh admin.'); }
+  };
+  bus.onConnect = sendJoin;
+  bus.start(); bus.sub(tp); bus.sub(b + '/h');
+  every(() => {
+    if (!bus) return;
+    tick++;
+    if (!joined) {
+      tries++; sendJoin();
+      if (!rejoining && tries > 6) { teardown(); toast('Room tidak ditemukan atau admin sedang offline. Cek lagi kodenya.'); return; }
+    } else {
+      if (tick % 4 === 0) bus.pub(b + '/hb', { pid });
+      if (!(view && view.vote && view.vote.open)) pending = null;
+      else if (pending && view.myVote !== pending) bus.pub(b + '/vote', { t: 'vote', pid, target: pending });
+    }
+    if (!bus.ok) banner('Koneksi terputus, menyambung ulang…', true);
+    else if (joined && Date.now() - lastHost > 20000) banner('Admin terputus. Menunggu…', true);
+    else if (rejoining && !joined) banner('Menyambung ke room…', true);
+    else banner(null);
+  }, 2000);
+}
+
+/* ---------- util tampilan ---------- */
+const hue = s => { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
+const av = (name, size) => `<span class="av ${size || ''}" style="background:hsl(${hue(name)} 70% 55%)">${esc(String(name).charAt(0).toUpperCase())}</span>`;
+const chip = (p, extra) => `<span class="chip ${p.online === false ? 'off' : ''} ${extra || ''}">${av(p.name)}<span>${esc(p.name)}</span></span>`;
+
+/* ---------- layar awal ---------- */
+function showHome() {
+  viewKey = 'home'; view = null; hideOverlays();
+  const prefill = new URLSearchParams(location.search).get('room') || '';
+  app.innerHTML = `
+    <div class="hero">
+      <div class="icon">🕵️</div>
+      <h1 class="logo">Tiru <span>Aku</span></h1>
+      <p class="tag">Semua gerak sesuai nomor kegiatan. Yang spy harus pura-pura tahu!</p>
+    </div>
+    <div class="card">
+      <label for="code">Kode room</label>
+      <input id="code" type="text" maxlength="4" autocapitalize="characters" autocomplete="off" placeholder="mis. K7QA" value="${esc(prefill.toUpperCase())}">
+      <div style="height:12px"></div>
+      <label for="name">Namamu</label>
+      <input id="name" type="text" maxlength="20" autocomplete="off" placeholder="mis. Budi">
+      <div style="height:16px"></div>
+      <button id="join" class="block">Masuk room</button>
+    </div>
+    <div class="divider">atau kamu yang jadi admin?</div>
+    <button id="create" class="block alt">Buat room baru</button>`;
+  $('#join').onclick = join;
+  $('#name').onkeydown = e => { if (e.key === 'Enter') join(); };
+  $('#create').onclick = () => createRoom();
+}
+function join() {
+  const code = $('#code').value.trim().toUpperCase(), name = $('#name').value.trim();
+  if (!code || !name) return toast('Isi kode room dan namamu dulu.');
+  toast('Menyambung ke room…');
+  connectPlayer(code, name, null, false);
+}
+
+/* ---------- render sesuai state ---------- */
+function receive(st) {
+  view = st;
+  const key = st.role + ':' + st.phase;
+  if (key !== viewKey) buildScreen(st);
+  updateScreen(st);
+  lastCalled = st.called;
+  renderOverlays(st);
+}
+
+function buildScreen(st) {
+  viewKey = st.role + ':' + st.phase;
+  lastCalled = null;
+  if (st.role === 'admin' && st.phase === 'lobby') {
+    app.innerHTML = `
+      <div class="page-title">👑 Kamu admin</div>
+      <div class="card glass">
+        <div class="muted" style="text-align:center">Bagikan kode ini ke peserta</div>
+        <div class="code" id="roomcode"></div>
+        <button id="copy" class="ghost block">📋 Salin link ajakan</button>
+        <p class="muted" style="margin:12px 0 0;font-size:.9rem;text-align:center">Jangan tutup tab ini selama game berlangsung.</p>
+      </div>
+      <div class="card">
+        <h3>Pemain <span id="pcount" class="muted"></span></h3>
+        <div id="plist" class="players"></div>
+      </div>
+      <div class="card">
+        <h3>Jumlah spy</h3>
+        <div class="stepper">
+          <button id="minus" class="alt" aria-label="Kurangi spy">−</button>
+          <b id="spyN">1</b>
+          <button id="plus" class="alt" aria-label="Tambah spy">+</button>
+        </div>
+        <p id="hint" class="muted" style="margin-top:10px;font-size:.9rem"></p>
+      </div>
+      <div class="card">
+        <details>
+          <summary>✏️ Edit 20 kegiatan</summary>
+          <p class="muted">Satu kegiatan per baris, tepat 20 baris. Nomor mengikuti urutan.</p>
+          <textarea id="acts" spellcheck="false"></textarea>
+          <div style="height:10px"></div>
+          <button id="saveActs" class="alt block">Simpan kegiatan</button>
+        </details>
+      </div>
+      <button id="start" class="block">🚀 Mulai game</button>
+      <div style="height:10px"></div>
+      <button id="close" class="ghost block">Tutup room &amp; keluar</button>`;
+    $('#roomcode').textContent = st.code;
+    $('#acts').value = st.activities.join('\n');
+    $('#copy').onclick = () => {
+      const link = location.origin + location.pathname + '?room=' + st.code;
+      (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(() => toast('Link tersalin.'), () => toast(link));
+    };
+    $('#minus').onclick = () => act('config', { spyCount: Math.max(1, view.spyCount - 1) });
+    $('#plus').onclick = () => act('config', { spyCount: view.spyCount + 1 });
+    $('#saveActs').onclick = () => {
+      const lines = $('#acts').value.split('\n').map(s => s.trim()).filter(Boolean);
+      if (lines.length !== 20) return toast('Harus tepat 20 baris (sekarang ' + lines.length + ').');
+      act('config', { activities: lines }); toast('Kegiatan disimpan.');
+    };
+    $('#start').onclick = () => act('start');
+    $('#close').onclick = () => { if (confirm('Tutup room? Semua pemain akan dikeluarkan.')) act('close'); };
+  }
+  else if (st.role === 'admin' && st.phase === 'playing') {
+    app.innerHTML = `
+      <div class="row" style="margin-bottom:12px">
+        <div class="page-title grow" style="margin:0">Room <span class="small-code" id="roomcode"></span></div>
+        <button id="reset" class="ghost" style="padding:8px 12px">Lobby</button>
+      </div>
+      <div class="card">
+        <h3>🕵️ Spy kali ini</h3>
+        <div id="spies" class="players"></div>
+        <div style="height:12px"></div>
+        <button id="reveal" class="danger block">Bongkar spy ke semua orang</button>
+      </div>
+      <div id="votecard"></div>
+      <div id="overbox"></div>
+      <div id="logbox"></div>
+      <div class="stick"><div id="callcard"></div></div>
+      <h3 style="color:#fff;margin:4px 0 10px">Ketuk nomor untuk diumumkan</h3>
+      <div id="tiles" class="tiles"></div>
+      <div class="card"><details><summary>📋 Lihat daftar kegiatan</summary><div id="grid" class="list"></div></details></div>
+      <button id="close" class="ghost block">Tutup room &amp; keluar</button>`;
+    $('#roomcode').textContent = st.code;
+    $('#close').onclick = () => { if (confirm('Tutup room? Semua pemain akan dikeluarkan.')) act('close'); };
+    $('#reset').onclick = () => { if (confirm('Balik ke lobby? Spy akan diacak ulang di ronde berikutnya.')) act('reset'); };
+    $('#reveal').onclick = () => act('reveal');
+  }
+  else if (st.role === 'player' && st.phase === 'lobby') {
+    app.innerHTML = `
+      <div class="page-title">Halo, <span id="me"></span> 👋</div>
+      <div class="card glass">
+        <div class="muted" style="text-align:center">Room</div>
+        <div class="code" id="roomcode"></div>
+        <p class="muted" style="text-align:center;margin:0">Menunggu admin memulai game…</p>
+      </div>
+      <div class="card">
+        <h3>Sudah masuk <span id="pcount" class="muted"></span></h3>
+        <div id="plist" class="players"></div>
+      </div>
+      <button id="leave" class="ghost block">Keluar</button>`;
+    $('#me').textContent = st.me.name;
+    $('#roomcode').textContent = st.code;
+    $('#leave').onclick = () => { save('spy_session', null); location.reload(); };
+  }
+  else if (st.role === 'player' && st.phase === 'playing') {
+    app.innerHTML = `
+      <div class="stick"><div id="rolebar" class="rolebar"></div><div id="callcard"></div></div>
+      <div id="overbox"></div>
+      <div id="notebox"></div>
+      <div id="logbox"></div>
+      <div id="revealbox"></div>
+      <div class="card"><details ${st.isSpy ? '' : 'open'}><summary>📋 Daftar 20 kegiatan</summary><div id="grid" class="list"></div></details></div>`;
+  }
+}
+
+function updateScreen(st) {
+  const pulse = st.called !== null && st.called !== lastCalled;
+
+  if (st.role === 'admin' && st.phase === 'lobby') {
+    $('#pcount').textContent = '(' + st.players.length + ')';
+    $('#plist').innerHTML = st.players.length
+      ? st.players.map(p => `<span class="chip ${p.online ? '' : 'off'}">${av(p.name)}<span>${esc(p.name)}</span><button data-k="${p.id}" aria-label="Keluarkan ${esc(p.name)}">×</button></span>`).join('')
+      : '<span class="muted">Belum ada yang masuk.</span>';
+    document.querySelectorAll('[data-k]').forEach(b => b.onclick = () => act('kick', b.dataset.k));
+    $('#spyN').textContent = st.spyCount;
+    const n = st.players.length;
+    $('#hint').textContent = n >= 2 ? `Saran: ${Math.max(1, Math.round(n / 6))} spy untuk ${n} pemain.` : '';
+    $('#start').disabled = n < 2 || st.spyCount >= n;
+  }
+  else if (st.role === 'admin' && st.phase === 'playing') {
+    const spySet = new Set(st.spies);
+    $('#spies').innerHTML = st.players.filter(p => spySet.has(p.id)).map(p => chip(p, 'spy' + (st.out.includes(p.id) ? ' out' : ''))).join('');
+    $('#reveal').disabled = st.revealed;
+    $('#reveal').textContent = st.revealed ? 'Spy sudah dibongkar' : 'Bongkar spy ke semua orang';
+    $('#votecard').innerHTML = adminVoteHTML(st);
+    ['openvote', 'closevote'].forEach(id => { const el = $('#' + id); if (el) el.onclick = () => act(id); });
+    $('#overbox').innerHTML = overHTML(st.over);
+    $('#logbox').innerHTML = logHTML(st.log);
+    renderCall(st, st.activities[st.called - 1], false, pulse);
+    $('#tiles').innerHTML = st.activities.map((a, i) => `<button class="tile ${st.called === i + 1 ? 'active' : ''}" data-n="${i + 1}" aria-label="Nomor ${i + 1}: ${esc(a)}">${i + 1}</button>`).join('');
+    document.querySelectorAll('[data-n]').forEach(b => b.onclick = () => act('call', +b.dataset.n));
+    $('#grid').innerHTML = st.activities.map((a, i) => `<div class="item ${st.called === i + 1 ? 'active' : ''}"><span class="n">${i + 1}</span><span>${esc(a)}</span></div>`).join('');
+  }
+  else if (st.role === 'player' && st.phase === 'lobby') {
+    $('#pcount').textContent = '(' + st.players.length + ')';
+    $('#plist').innerHTML = st.players.map(p => chip(p)).join('');
+  }
+  else if (st.role === 'player' && st.phase === 'playing') {
+    $('#rolebar').innerHTML =
+      (st.isSpy ? '<span class="pill spy">🕵️ Kamu SPY</span>' : '<span class="pill ok">😇 Kamu INNOCENT</span>') +
+      (st.isOut ? '<span class="pill out">Tereliminasi</span>' : '') +
+      `<span class="pill">Room ${esc(st.code)}</span>`;
+    renderCall(st, st.isSpy ? null : st.activities[st.called - 1], st.isSpy, pulse);
+    $('#overbox').innerHTML = overHTML(st.over);
+    $('#notebox').innerHTML = (st.isOut && st.vote && st.vote.open)
+      ? '<div class="card glass"><h3>🗳️ Voting dibuka</h3><p class="muted">Kamu sudah tereliminasi, jadi tidak ikut vote.</p></div>' : '';
+    $('#logbox').innerHTML = logHTML(st.log);
+    $('#revealbox').innerHTML = (st.revealed && !st.over)
+      ? `<div class="card"><h3>🕵️ Spy-nya adalah</h3><div class="players">${st.revealed.map(n => chip({ name: n }, 'spy')).join('')}</div></div>`
+      : (st.revealed ? `<div class="card"><h3>🕵️ Spy-nya adalah</h3><div class="players">${st.revealed.map(n => chip({ name: n }, 'spy')).join('')}</div></div>` : '');
+    const rows = [];
+    for (let i = 0; i < 20; i++) {
+      const text = st.isSpy ? 'YOU ARE THE SPY' : st.activities[i];
+      rows.push(`<div class="item ${st.isSpy ? 'spyrow' : ''} ${st.called === i + 1 ? 'active' : ''}"><span class="n">${i + 1}</span><span>${esc(text)}</span></div>`);
+    }
+    $('#grid').innerHTML = rows.join('');
+  }
+}
+
+function renderCall(st, text, isSpy, pulse) {
+  const box = $('#callcard');
+  if (st.called === null) {
+    box.innerHTML = '<div class="call idle"><div class="act">Menunggu admin menyebut nomor…</div></div>';
+    return;
+  }
+  const label = isSpy ? 'YOU ARE THE SPY' : text;
+  box.innerHTML = `<div class="call ${isSpy ? 'spy' : ''} ${pulse ? 'pulse' : ''}"><div class="lbl">NOMOR</div><div class="num">${st.called}</div><div class="act">${esc(label)}</div></div>`;
+}
+
+/* ---------- voting & hasil ---------- */
+function adminVoteHTML(st) {
+  if (st.over) return '';
+  if (st.vote.open) {
+    const pct = st.vote.total ? Math.round(st.vote.voted / st.vote.total * 100) : 0;
+    return `<div class="card"><h3>🗳️ Voting sedang dibuka</h3>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <p class="muted" style="margin:0 0 12px">Sudah vote: <b>${st.vote.voted}</b> dari ${st.vote.total} (skip dihitung)</p>
+      <button id="closevote" class="danger block">Tutup voting &amp; umumkan</button></div>`;
+  }
+  return '<button id="openvote" class="block" style="margin-bottom:14px">🗳️ Buka voting</button>';
+}
+
+function overHTML(over) {
+  if (!over) return '';
+  return over === 'innocent'
+    ? '<div class="over inn">🎉 Innocent menang!<small>Semua spy sudah tertangkap.</small></div>'
+    : '<div class="over spy">🕵️ Spy menang!<small>Jumlah spy sudah menyamai innocent.</small></div>';
+}
+
+function logHTML(log) {
+  if (!log || !log.length) return '';
+  return `<div class="card"><h3>Sudah keluar</h3><div class="players">${log.map(l =>
+    `<span class="chip ${l.isSpy ? 'spy' : 'inn'}">${av(l.name)}<span>${esc(l.name)}</span><em>${l.isSpy ? 'SPY' : 'INNOCENT'}</em></span>`).join('')}</div></div>`;
+}
+
+let shownResult = null, ovTimer = null;
+function hideOverlays() {
+  clearTimeout(ovTimer); $('#overlay').classList.add('hidden'); $('#overlay').innerHTML = '';
+  $('#sheet').classList.add('hidden'); $('#sheet').innerHTML = ''; document.body.classList.remove('lock');
+}
+function renderOverlays(st) {
+  if (st.phase === 'playing' && st.result) showResult(st.result);
+  renderSheet(st);
+}
+
+function showResult(r) {
+  if (r.id === shownResult) return;
+  shownResult = r.id;
+  const ov = $('#overlay');
+  const tally = (r.tally.map(t => `${esc(t.name)}: ${t.count}`).concat(r.skip ? ['Skip: ' + r.skip] : [])).join(' · ');
+  let cls = '', inner = '';
+  if (r.kind === 'out') {
+    cls = r.out.isSpy ? 'spy' : 'inn';
+    inner = `${av(r.out.name, 'xl')}<div class="who">${esc(r.out.name)}</div><div class="sub">tereliminasi</div>
+      <div class="badge">${r.out.isSpy ? 'DIA SPY!' : 'DIA INNOCENT'}</div>`;
+  } else if (r.kind === 'skip') {
+    inner = '<div class="emoji">🙅</div><div class="who">Mayoritas skip</div><div class="sub">Tidak ada yang tereliminasi.</div>';
+  } else if (r.kind === 'tie') {
+    inner = '<div class="emoji">⚖️</div><div class="who">Hasil seri</div><div class="sub">Tidak ada yang tereliminasi.</div>';
+  } else {
+    inner = '<div class="emoji">🤷</div><div class="who">Tidak ada suara</div><div class="sub">Tidak ada yang tereliminasi.</div>';
+  }
+  let conf = '';
+  if (r.kind === 'out') {
+    const cols = ['#ffd23f', '#ff4d7d', '#2fd39a', '#fff', '#7a5cff'];
+    for (let i = 0; i < 26; i++) conf += `<i class="confetti" style="left:${Math.random() * 100}%;background:${cols[i % 5]};animation-delay:${(Math.random() * .6).toFixed(2)}s"></i>`;
+  }
+  ov.innerHTML = `<div class="ocard ${cls}">${conf}${inner}${tally ? `<div class="tally">${tally}</div>` : ''}<div class="timer"></div></div>`;
+  ov.classList.remove('hidden');
+  ov.onclick = () => ov.classList.add('hidden');
+  clearTimeout(ovTimer);
+  ovTimer = setTimeout(() => ov.classList.add('hidden'), 5000);
+}
+
+function renderSheet(st) {
+  const sh = $('#sheet');
+  const show = st.role === 'player' && st.phase === 'playing' && st.vote && st.vote.open && !st.isOut;
+  if (!show) { sh.classList.add('hidden'); sh.innerHTML = ''; document.body.classList.remove('lock'); return; }
+  const prev = sh.querySelector('.sheet-body'), top = prev ? prev.scrollTop : 0;
+  const mine = pending || st.myVote;
+  const mineName = mine === 'skip' ? 'Skip vote' : (st.vote.candidates.find(c => c.id === mine) || {}).name;
+  sh.innerHTML = `
+    <div class="sheet-head"><h2>🗳️ Siapa spy-nya?</h2><p>Ketuk satu nama. Boleh ganti sebelum voting ditutup.</p></div>
+    <div class="sheet-body"><div class="vgrid">${st.vote.candidates.map(c =>
+      `<button class="vbtn ${mine === c.id ? 'sel' : ''}" data-v="${c.id}">${av(c.name, 'lg')}<span>${esc(c.name)}</span>${mine === c.id ? '<b class="tick">✓</b>' : ''}</button>`).join('')}</div></div>
+    <div class="sheet-foot">
+      <button class="alt block ${mine === 'skip' ? 'on' : ''}" data-v="skip">🙅 Skip vote (tidak memilih)</button>
+      <div class="st">${mineName ? 'Pilihanmu: <b>' + esc(mineName) + '</b>. Menunggu admin menutup voting…' : 'Kamu belum memilih.'}</div>
+    </div>`;
+  sh.classList.remove('hidden');
+  document.body.classList.add('lock');
+  sh.querySelector('.sheet-body').scrollTop = top;
+  sh.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { sendVote(b.dataset.v); renderSheet(view); });
+}
+
+/* ---------- mulai ---------- */
+(function init() {
+  if (typeof mqtt === 'undefined') { app.innerHTML = '<div class="card"><h3>Gagal memuat library</h3><p>Cek koneksi internetmu lalu refresh halaman.</p></div>'; return; }
+  const hs = load('spy_host'), ps = load('spy_session');
+  if (hs) { restoreHost(hs); banner('Memulihkan room…'); app.innerHTML = ''; startHost(hs.code); }
+  else if (ps) { banner('Menyambung ke room…', true); app.innerHTML = ''; connectPlayer(ps.code, ps.name, ps.pid, true); }
+  else showHome();
+})();
+</script>
+</body>
+</html>
